@@ -114,15 +114,15 @@ useEffect(() => {
   };
   loadData();
 }, [gatewayUser]);
-      
-      const storageKey = `accountaid_state_pro_${gatewayUser.email}`;
-      const docRef = doc(db, "user_states", storageKey);
-      
-      try {
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          // यदि क्लाउडमा डेटा छ भने त्यो लोड गर्ने
-          setState(docSnap.data() as AppState);
+  // यी लाइनहरू सुरुदेखि अन्त्यसम्म मेट्नुहोस्
+const storageKey = `accountaid_state_pro_${gatewayUser.email}`;
+const docRef = doc(db, "user_states", storageKey);
+
+try {
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    // यदि क्लाउडमा डेटा छ भने त्यो लोड गर्ने
+    setState(docSnap.data() as AppState);
         } else {
           // यदि छैन भने सुरुको खाली स्टेट राख्ने
           setState(getInitialState());

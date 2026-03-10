@@ -1,0 +1,7 @@
+{
+  "name": "AccountAid - Pro ",
+  "description": "A comprehensive accounting and inventory management system designed specifically for mobile repair shops and retail businesses, featuring IMEI tracking, party ledgers, and repair flow management.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

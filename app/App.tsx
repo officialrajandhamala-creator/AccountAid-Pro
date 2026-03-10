@@ -59,33 +59,55 @@ const App: React.FC = () => {
   const [gatewayUser, setGatewayUser] = useState<any>(() => {
     const saved = localStorage.getItem('accountaid_gateway_session');
     return saved ? JSON.parse(saved) : null;
-  });
-  
-  const [activeUser, setActiveUser] = useState<{ id: string, name: string, role: 'admin' | 'user' } | null>(() => {
-    const saved = localStorage.getItem('accountaid_active_session');
-    return saved ? JSON.parse(saved) : null;
-  });
+useEffect(() => {
+  const saveDataToCloud = async () => {
+    if (gatewayUser && state.hasUnsavedChanges) {
+      const storageKey = `accountaid_state_pro_${gatewayUser.email}`;
+      try {
+        await setDoc(doc(db, "user_states", storageKey), {
+          ...state,
+          hasUnsavedChanges: false, // सेभ भएपछि यसलाई false बनाउने
+          lastUpdated: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error("Cloud मा सेभ गर्दा एरर आयो:", error);
+      }
+    }
+  };
 
+  saveDataToCloud();
+}, [state, gatewayUser]);
   const [superAdminSession, setSuperAdminSession] = useState<SuperAdminSession | null>(null);
 
   const [state, setState] = useState<AppState>(getInitialState());
 
   useEffect(() => {
+  const loadDataFromCloud = async () => {
     if (gatewayUser) {
+      // सेसनलाई लोकलमै राख्न सकिन्छ
       localStorage.setItem('accountaid_gateway_session', JSON.stringify(gatewayUser));
+      
       const storageKey = `accountaid_state_pro_${gatewayUser.email}`;
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          const base = getInitialState();
-          base.parties.forEach(sa => {
-            if (!parsed.parties.find((p: any) => p.id === sa.id)) parsed.parties.push(sa);
-          });
-          if (!parsed.cashVault) parsed.cashVault = base.cashVault;
-          if (!parsed.locations) parsed.locations = base.locations;
-          if (parsed.settings.vatEnabled === undefined) {
-            parsed.settings.vatEnabled = false;
+      const docRef = doc(db, "user_states", storageKey);
+      
+      try {
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          // यदि क्लाउडमा डेटा छ भने त्यो लोड गर्ने
+          setState(docSnap.data() as AppState);
+        } else {
+          // यदि छैन भने सुरुको खाली स्टेट राख्ने
+          setState(getInitialState());
+        }
+      } catch (error) {
+        console.error("Cloud बाट डेटा तान्न सकिएन:", error);
+        setState(getInitialState());
+      }
+    }
+  };
+
+  loadDataFromCloud();
+}, [gatewayUser]);
             parsed.settings.vatRate = 13;
           }
           setState({ ...parsed, hasUnsavedChanges: false });

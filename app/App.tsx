@@ -74,13 +74,25 @@ useEffect(() => {
       }
     }
   };
+   useEffect(() => {
+  const saveData = async () => {
+    if (gatewayUser && state.hasUnsavedChanges) {
+      const docRef = doc(db, "user_states", `state_${gatewayUser.email}`);
+      try {
+        // यहाँ { } भित्र डेटा राख्नुपर्छ
+        await setDoc(docRef, {
+          ...state,
+          hasUnsavedChanges: false,
+          lastSync: new Date().toISOString()
+        });
+        console.log("Cloud sync successful!");
+      } catch (error) {
+        console.error("Sync Error:", error);
+      }
+    }
+  };
   saveData();
 }, [state, gatewayUser]);
-          ...state,
-          hasUnsavedChanges: false, // सेभ भएपछि यसलाई false बनाउने
-          lastUpdated: new Date().toISOString()
-        });
-      } catch (error) {
         useEffect(() => {
   const loadData = async () => {
     if (gatewayUser) {
